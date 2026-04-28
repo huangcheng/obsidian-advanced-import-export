@@ -1,90 +1,84 @@
-# Obsidian Sample Plugin
+# Advanced Import / Export
 
-This is a sample plugin for Obsidian (https://obsidian.md).
+An [Obsidian](https://obsidian.md) plugin for exporting and importing notes with portable Markdown transforms and integrations with external note-taking apps.
 
-This project uses TypeScript to provide type checking and documentation.
-The repo depends on the latest plugin API (obsidian.d.ts) in TypeScript Definition format, which contains TSDoc comments describing what it does.
+**Desktop only** — requires Obsidian v1.4.0+.
 
-This sample plugin demonstrates some of the basic functionality the plugin API can do.
-- Adds a ribbon icon, which shows a Notice when clicked.
-- Adds a command "Open modal (simple)" which opens a Modal.
-- Adds a plugin setting tab to the settings page.
-- Registers a global click event and output 'click' to the console.
-- Registers a global interval which logs 'setInterval' to the console.
+## Features
 
-## First time developing plugins?
+### Export as pure Markdown
 
-Quick starting guide for new plugin devs:
+Transform Obsidian-specific syntax into portable Markdown that works anywhere:
 
-- Check if [someone already developed a plugin for what you want](https://obsidian.md/plugins)! There might be an existing plugin similar enough that you can partner up with.
-- Make a copy of this repo as a template with the "Use this template" button (login to GitHub if you don't see it).
-- Clone your repo to a local development folder. For convenience, you can place this folder in your `.obsidian/plugins/your-plugin-name` folder.
-- Install NodeJS, then run `npm i` in the command line under your repo folder.
-- Run `npm run dev` to compile your plugin from `main.ts` to `main.js`.
-- Make changes to `main.ts` (or create new `.ts` files). Those changes should be automatically compiled into `main.js`.
-- Reload Obsidian to load the new version of your plugin.
-- Enable plugin in settings window.
-- For updates to the Obsidian API run `npm update` in the command line under your repo folder.
+- **Copy as pure Markdown** — transform the active note and copy to clipboard.
+- **Export to folder** — write transformed notes to a configurable export directory.
 
-## Releasing new releases
+#### Transform options
 
-- Update your `manifest.json` with your new version number, such as `1.0.1`, and the minimum Obsidian version required for your latest release.
-- Update your `versions.json` file with `"new-plugin-version": "minimum-obsidian-version"` so older versions of Obsidian can download an older version of your plugin that's compatible.
-- Create new GitHub release using your new version number as the "Tag version". Use the exact version number, don't include a prefix `v`. See here for an example: https://github.com/obsidianmd/obsidian-sample-plugin/releases
-- Upload the files `manifest.json`, `main.js`, `styles.css` as binary attachments. Note: The manifest.json file must be in two places, first the root path of your repository and also in the release.
-- Publish the release.
+| Option | Description | Default |
+|--------|-------------|---------|
+| Resolve `[[wikilinks]]` | Convert wikilinks to standard Markdown links | On |
+| Embed handling | What to do with `![[embeds]]` | Replace with link |
+| Flatten callouts | Convert `> [!note]` callouts to blockquotes | On |
+| Drop frontmatter | Remove YAML frontmatter from output | Off |
+| Rewrite attachments | How to handle image/attachment paths | Vault-relative |
 
-> You can simplify the version bump process by running `npm version patch`, `npm version minor` or `npm version major` after updating `minAppVersion` manually in `manifest.json`.
-> The command will bump version in `manifest.json` and `package.json`, and add the entry for the new version to `versions.json`
+### Bear integration (macOS)
 
-## Adding your plugin to the community plugin list
+**Export to Bear** — send notes to Bear via `bear://x-callback-url/create`. Tags from frontmatter are preserved.
 
-- Check the [plugin guidelines](https://docs.obsidian.md/Plugins/Releasing/Plugin+guidelines).
-- Publish an initial version.
-- Make sure you have a `README.md` file in the root of your repo.
-- Make a pull request at https://github.com/obsidianmd/obsidian-releases to add your plugin.
+**Import from Bear** — enter a Bear note UUID or URL (e.g. `bear://x-callback-url/open-note?id=...`), and the plugin fetches the note via Bear's x-callback-url and writes it into your vault.
 
-## How to use
+### Context menu
 
-- Clone this repo.
-- Make sure your NodeJS is at least v16 (`node --version`).
-- `npm i` or `yarn` to install dependencies.
-- `npm run dev` to start compilation in watch mode.
+Right-click any file in the file explorer (or select multiple files) to find the **Advanced Import/Export** submenu with all available actions.
 
-## Manually installing the plugin
+## Settings
 
-- Copy over `main.js`, `styles.css`, `manifest.json` to your vault `VaultFolder/.obsidian/plugins/your-plugin-id/`.
+Configure via **Settings → Community plugins → Advanced Import/Export**.
 
-## Improve code quality with eslint
-- [ESLint](https://eslint.org/) is a tool that analyzes your code to quickly find problems. You can run ESLint against your plugin to find common bugs and ways to improve your code. 
-- This project already has eslint preconfigured, you can invoke a check by running`npm run lint`
-- Together with a custom eslint [plugin](https://github.com/obsidianmd/eslint-plugin) for Obsidan specific code guidelines.
-- A GitHub action is preconfigured to automatically lint every commit on all branches.
+- **Export folder** — directory for exported notes (default: `Exports`)
+- **Import folder** — directory for imported notes (default: `Imports`)
+- **Concurrency** — parallel export workers (default: 4)
+- **Transform options** — configure Markdown output format
 
-## Funding URL
+## Commands
 
-You can include funding URLs where people who use your plugin can financially support it.
+| Command | Description |
+|---------|-------------|
+| `Copy as pure Markdown` | Transform and copy active note to clipboard |
+| `Export current note as pure Markdown` | Export active note to folder |
+| `Export current note to Bear` | Send active note to Bear |
+| `Import from Bear` | Import a note from Bear via UUID or URL |
 
-The simple way is to set the `fundingUrl` field to your link in your `manifest.json` file:
+## Installation
 
-```json
-{
-    "fundingUrl": "https://buymeacoffee.com"
-}
+### From GitHub release
+
+1. Download `main.js`, `manifest.json`, and `styles.css` from the [latest release](https://github.com/huangcheng/obsidian-advanced-import-export/releases).
+2. Copy them into `<vault>/.obsidian/plugins/advanced-import-export/`.
+3. Enable the plugin in **Settings → Community plugins**.
+
+### Build from source
+
+```bash
+git clone https://github.com/huangcheng/obsidian-advanced-import-export.git
+cd obsidian-advanced-import-export
+npm install
+npm run build
 ```
 
-If you have multiple URLs, you can also do:
+Copy the output files (`main.js`, `manifest.json`, `styles.css`) into your vault's plugin directory.
 
-```json
-{
-    "fundingUrl": {
-        "Buy Me a Coffee": "https://buymeacoffee.com",
-        "GitHub Sponsor": "https://github.com/sponsors",
-        "Patreon": "https://www.patreon.com/"
-    }
-}
+## Development
+
+```bash
+npm install        # install dependencies
+npm run dev        # watch mode — auto-rebuild on changes
+npm run build      # production build
+npm run lint       # run ESLint
 ```
 
-## API Documentation
+## License
 
-See https://docs.obsidian.md
+[MIT](LICENSE)
