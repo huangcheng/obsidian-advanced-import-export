@@ -5,6 +5,7 @@ import { ProviderConfigBase } from "../providers/registry";
 import { WpsProvider } from "../providers/wps/wps-provider";
 import { WpsProviderConfig } from "../providers/wps/types";
 import { YoudaoProvider } from "../providers/youdao/youdao-provider";
+import { BEAR_NAME, WPS_NAME, YOUDAO_NAME } from "../ui/brand-names";
 import {
 	YOUDAO_API_KEY_URL,
 	YOUDAO_INSTALL_CMD,
@@ -149,7 +150,7 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl).setHeading().setName("Providers");
 		containerEl.createEl("p", {
-			text: "Configure note-source integrations (Bear, WPS, Youdao). Each provider exposes import / export operations to the plugin's commands and the file-explorer right-click menu.",
+			text: `Configure note-source integrations for ${BEAR_NAME}, ${WPS_NAME}, and ${YOUDAO_NAME}. Each provider exposes import / export operations to the plugin's commands and the file-explorer right-click menu.`,
 		});
 
 		for (const cfg of this.plugin.settings.providers) {
@@ -207,7 +208,7 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 		);
 		const desc = containerEl.createEl("p");
 		desc.setText(
-			"Connect to WPS Note via its MCP server or the local CLI. Desktop Obsidian only for CLI.",
+			`Connect to ${WPS_NAME} via its server endpoint or the local CLI. Desktop Obsidian only for CLI.`,
 		);
 
 		new Setting(containerEl).setName("Display name").addText((text) =>
@@ -219,7 +220,7 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName("Transport")
-			.setDesc("Choose how the plugin reaches WPS Note.")
+			.setDesc(`Choose how the plugin reaches ${WPS_NAME}.`)
 			.addDropdown((dd) =>
 				dd
 					.addOptions({ mcp: "MCP server", cli: "wpsnote-cli (CLI)" })
@@ -236,7 +237,7 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 			const mcp = config.mcp;
 
 			new Setting(containerEl)
-				.setName("MCP transport")
+				.setName("Server transport")
 				.addDropdown((dd) =>
 					dd
 						.addOptions({ http: "HTTP", stdio: "Stdio" })
@@ -300,7 +301,7 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 			const cli = config.cli;
 			new Setting(containerEl)
 				.setName("CLI binary")
-				.setDesc("Path to the WPS Note CLI binary. Leave as default to resolve via system path.")
+				.setDesc(`Path to the ${WPS_NAME} CLI binary. Leave as default to resolve via system path.`)
 				.addText((text) =>
 					text
 						.setValue(cli.binPath ?? "")
@@ -366,7 +367,7 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName("CLI binary")
-			.setDesc("Path to the Youdao Note CLI binary. Leave as default to resolve via system path.")
+			.setDesc(`Path to the ${YOUDAO_NAME} CLI binary. Leave as default to resolve via system path.`)
 			.addText((text) =>
 				text
 					.setValue(config.cliPath ?? "")
@@ -479,7 +480,7 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 	private renderBearProvider(containerEl: HTMLElement, config: BearProviderConfig): void {
 		new Setting(containerEl).setHeading().setName(config.displayName || "Bear");
 		containerEl.createEl("p", {
-			text: "Bear notes are reached via Bear's URL scheme (macOS and iOS only); no credentials needed.",
+			text: `${BEAR_NAME} notes are reached via the app's URL scheme (macOS and iOS only); no credentials needed.`,
 		});
 
 		new Setting(containerEl)
@@ -493,7 +494,7 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName("Enabled")
-			.setDesc("Show Bear in commands and the file-explorer submenu.")
+			.setDesc(`Show ${BEAR_NAME} in commands and the file-explorer submenu.`)
 			.addToggle((tog) =>
 				tog.setValue(config.enabled).onChange(async (v) => {
 					config.enabled = v;
@@ -503,7 +504,7 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName("Trusted")
-			.setDesc("Allow Bear to send and receive notes via callback URL.")
+			.setDesc(`Allow ${BEAR_NAME} to send and receive notes via callback URL.`)
 			.addToggle((tog) =>
 				tog.setValue(config.trusted).onChange(async (v) => {
 					config.trusted = v;

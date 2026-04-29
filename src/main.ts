@@ -16,6 +16,7 @@ import { NoteSelection } from "./selection/note-selection";
 import { applyDefaultProviderMigration, DEFAULT_SETTINGS, PluginSettings } from "./settings";
 import { AdvancedImportExportSettingTab } from "./settings/settings-tab";
 import { MarkdownTransformer } from "./transforms/transformer";
+import { BEAR_NAME, PLUGIN_NAME, WPS_NAME, YOUDAO_NAME } from "./ui/brand-names";
 import { ExportConfirmModal } from "./ui/export-confirm-modal";
 import { BearImportModal } from "./ui/bear-import-modal";
 
@@ -78,7 +79,7 @@ export default class AdvancedImportExportPlugin extends Plugin {
 
 		this.addCommand({
 			id: "export-active-to-bear",
-			name: "Export current note to Bear",
+			name: `Send active note to ${BEAR_NAME}`,
 			checkCallback: (checking) => {
 				const sel = selectionFromActiveEditor(this.app);
 				if (!sel || sel.notes.length === 0) return false;
@@ -89,13 +90,13 @@ export default class AdvancedImportExportPlugin extends Plugin {
 
 		this.addCommand({
 			id: "import-from-bear",
-			name: "Import from Bear",
+			name: `Import from ${BEAR_NAME}`,
 			callback: () => this.importFromBear(),
 		});
 
 		this.addCommand({
 			id: "export-active-to-wps",
-			name: "Export current note to WPS Cloud Note…",
+			name: `Send active note to ${WPS_NAME}…`,
 			checkCallback: (checking) => {
 				if (this.listWpsConfigs().length === 0) return false;
 				const sel = selectionFromActiveEditor(this.app);
@@ -107,7 +108,7 @@ export default class AdvancedImportExportPlugin extends Plugin {
 
 		this.addCommand({
 			id: "export-active-to-youdao",
-			name: "Export current note to Youdao Note…",
+			name: `Send active note to ${YOUDAO_NAME}…`,
 			checkCallback: (checking) => {
 				if (this.listYoudaoConfigs().length === 0) return false;
 				const sel = selectionFromActiveEditor(this.app);
@@ -254,7 +255,7 @@ export default class AdvancedImportExportPlugin extends Plugin {
 			void (async () => {
 				const noteId = parseBearInput(request.noteId);
 				if (!noteId) {
-					new Notice("Invalid Bear note identifier. Enter a UUID or Bear URL.");
+					new Notice(`Invalid ${BEAR_NAME} identifier — enter a UUID or URL.`);
 					return;
 				}
 				this.bearImportModal?.setWaiting();
@@ -289,7 +290,7 @@ export default class AdvancedImportExportPlugin extends Plugin {
 		if (notes.length === 0) return;
 
 		menu.addItem((item) => {
-			item.setTitle("Advanced Import/Export").setIcon("lucide-arrow-left-right");
+			item.setTitle(`${PLUGIN_NAME}`).setIcon("lucide-arrow-left-right");
 			const sub = (item as MenuItem & { setSubmenu(): Menu }).setSubmenu();
 
 			if (notes.length === 1) {
@@ -311,14 +312,14 @@ export default class AdvancedImportExportPlugin extends Plugin {
 		if (files.length === 0) return;
 		const macOnly = !bearAvailable();
 		menu.addItem((item) => {
-			item.setTitle("Bear").setIcon("book-open");
+			item.setTitle(`${BEAR_NAME}`).setIcon("book-open");
 			const submenu = (item as MenuItem & { setSubmenu(): Menu }).setSubmenu();
 			submenu.addItem((sub: MenuItem) =>
 				sub
 					.setTitle(
 						files.length === 1
-							? "Export note to Bear"
-							: `Export ${files.length} notes to Bear`,
+							? `Send note to ${BEAR_NAME}`
+							: `Send ${files.length} notes to ${BEAR_NAME}`,
 					)
 					.setIcon("upload")
 					.setDisabled(macOnly)
@@ -326,14 +327,14 @@ export default class AdvancedImportExportPlugin extends Plugin {
 			);
 			submenu.addItem((sub: MenuItem) =>
 				sub
-					.setTitle("Import from Bear…")
+					.setTitle(`Import from ${BEAR_NAME}…`)
 					.setIcon("download")
 					.setDisabled(macOnly)
 					.onClick(() => this.importFromBear()),
 			);
 			if (macOnly) {
 				submenu.addItem((sub: MenuItem) =>
-					sub.setTitle("(Bear is macOS / iOS only)").setDisabled(true),
+					sub.setTitle(`(${BEAR_NAME} is macOS / iOS only)`).setDisabled(true),
 				);
 			}
 		});
@@ -428,7 +429,7 @@ export default class AdvancedImportExportPlugin extends Plugin {
 	private async pickYoudaoAndExport(files: TFile[]): Promise<void> {
 		const configs = this.listYoudaoConfigs();
 		if (configs.length === 0) {
-			new Notice("No Youdao providers configured");
+			new Notice(`No ${YOUDAO_NAME} providers configured`);
 			return;
 		}
 		const target = configs.length === 1 ? configs[0]! : await this.pickProviderConfig(configs, "Select Youdao provider…");
@@ -488,7 +489,7 @@ export default class AdvancedImportExportPlugin extends Plugin {
 	private async pickWpsAndExport(files: TFile[]): Promise<void> {
 		const configs = this.listWpsConfigs();
 		if (configs.length === 0) {
-			new Notice("No WPS providers configured");
+			new Notice(`No ${WPS_NAME} providers configured`);
 			return;
 		}
 		const target = configs.length === 1 ? configs[0]! : await this.pickProviderConfig(configs, "Select WPS provider…");

@@ -1,4 +1,5 @@
 import { App, Modal, Notice, Setting } from "obsidian";
+import { BEAR_NAME } from "./brand-names";
 
 export interface BearImportRequest {
 	noteId: string;
@@ -9,7 +10,6 @@ type ImportPhase = "input" | "waiting" | "done";
 export class BearImportModal extends Modal {
 	private phase: ImportPhase = "input";
 	private noteIdInput = "";
-	private statusEl!: HTMLElement;
 
 	constructor(
 		app: App,
@@ -21,7 +21,7 @@ export class BearImportModal extends Modal {
 	onOpen(): void {
 		const { contentEl } = this;
 		contentEl.empty();
-		new Setting(contentEl).setHeading().setName("Import from Bear");
+		new Setting(contentEl).setHeading().setName(`Import from ${BEAR_NAME}`);
 
 		if (this.phase === "input") {
 			this.renderInputPhase(contentEl);
@@ -55,7 +55,7 @@ export class BearImportModal extends Modal {
 
 	private renderInputPhase(el: HTMLElement): void {
 		el.createEl("p", {
-			text: "Enter a Bear note identifier (UUID) or a Bear URL. The note will be opened in Bear and its content sent back to Obsidian.",
+			text: `Enter a ${BEAR_NAME} note identifier (UUID) or a ${BEAR_NAME} URL. The note opens in the source app and its content is sent back to Obsidian.`,
 		});
 
 		new Setting(el)
@@ -74,7 +74,7 @@ export class BearImportModal extends Modal {
 		const importBtn = buttons.createEl("button", { text: "Import", cls: "mod-cta" });
 		importBtn.addEventListener("click", () => {
 			if (!this.noteIdInput) {
-				new Notice("Please enter a Bear note identifier or URL.");
+				new Notice(`Please enter a ${BEAR_NAME} identifier or URL.`);
 				return;
 			}
 			this.onSubmit({ noteId: this.noteIdInput });
@@ -83,9 +83,9 @@ export class BearImportModal extends Modal {
 
 	private renderWaitingPhase(el: HTMLElement): void {
 		el.createEl("p", {
-			text: "Waiting for Bear to respond… switch to Bear if needed and confirm the note open request.",
+			text: `Waiting for ${BEAR_NAME} to respond… switch to the source app if needed and confirm the note open request.`,
 		});
-		this.statusEl = el.createEl("p", { text: "⏳ Bear callback pending…", cls: "aie-bear-status" });
+		el.createEl("p", { text: `⏳ ${BEAR_NAME} callback pending…`, cls: "aie-bear-status" });
 
 		const buttons = el.createDiv({ cls: "modal-button-container" });
 		const cancelBtn = buttons.createEl("button", { text: "Cancel" });
