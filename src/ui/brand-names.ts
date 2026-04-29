@@ -4,4 +4,4 @@
 export const BEAR_NAME = "Bear";
 export const WPS_NAME = "WPS Cloud Note";
 export const YOUDAO_NAME = "Youdao Note";
-export const PLUGIN_NAME = "Advanced Import/Export";
+export const PLUGIN_NAME = "Cross-App Notes Bridge";

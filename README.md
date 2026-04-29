@@ -1,8 +1,14 @@
-# Advanced Import / Export
+# Cross-App Notes Bridge
 
-An [Obsidian](https://obsidian.md) plugin for exporting and importing notes with portable Markdown transforms and integrations with external note-taking apps.
+An [Obsidian](https://obsidian.md) plugin that exports notes as portable Markdown and bridges your vault with other note-taking apps — Bear (via `x-callback-url`), WPS Cloud Note, and Youdao Note (via their respective CLI/MCP clients).
 
-**Desktop only** — requires Obsidian v1.4.0+.
+Mobile-safe: stdio MCP transports and Bear are guarded at runtime and degrade gracefully on iOS/Android.
+
+## Why one plugin instead of three?
+
+These integrations share the same pipeline — selection → Markdown transforms → provider dispatch — and most users who care about Markdown portability use more than one of these apps. Bundling avoids duplicating the transform layer and keeps the right-click menu unified. Each provider can be enabled/disabled and trusted independently in settings, so you only see what you configure.
+
+The plugin is intentionally scoped to **first-class clients** for these three apps; there is no generic "add any MCP server" UI yet, because no single integration shape works across arbitrary MCP servers. New providers will be added as first-class clients in future versions.
 
 ## Features
 
@@ -23,33 +29,43 @@ Transform Obsidian-specific syntax into portable Markdown that works anywhere:
 | Drop frontmatter | Remove YAML frontmatter from output | Off |
 | Rewrite attachments | How to handle image/attachment paths | Vault-relative |
 
-### Bear integration (macOS)
+### Bear (macOS / iOS)
 
-**Export to Bear** — send notes to Bear via `bear://x-callback-url/create`. Tags from frontmatter are preserved.
+- **Send active note to Bear** — dispatched via `bear://x-callback-url/create`. Tags from frontmatter are preserved.
+- **Import from Bear** — enter a note UUID or Bear URL; the plugin opens Bear and writes the returned content into your vault.
 
-**Import from Bear** — enter a Bear note UUID or URL (e.g. `bear://x-callback-url/open-note?id=...`), and the plugin fetches the note via Bear's x-callback-url and writes it into your vault.
+### WPS Cloud Note (desktop)
+
+Send notes to WPS Cloud Note via the WPS Note CLI or its MCP server endpoint. Configure transport, command path, and headers in settings.
+
+### Youdao Note (desktop)
+
+Send notes to Youdao Note via the official `youdaonote` CLI. The plugin can detect the CLI, push your API key to it, and run a connection test from settings.
 
 ### Context menu
 
-Right-click any file in the file explorer (or select multiple files) to find the **Advanced Import/Export** submenu with all available actions.
+Right-click any file in the file explorer (or select multiple files) to find the **Cross-App Notes Bridge** submenu with all available actions.
 
 ## Settings
 
-Configure via **Settings → Community plugins → Advanced Import/Export**.
+Configure via **Settings → Community plugins → Cross-App Notes Bridge**.
 
 - **Export folder** — directory for exported notes (default: `Exports`)
 - **Import folder** — directory for imported notes (default: `Imports`)
 - **Concurrency** — parallel export workers (default: 4)
 - **Transform options** — configure Markdown output format
+- **Providers** — enable, trust, and configure Bear / WPS / Youdao independently
 
 ## Commands
 
 | Command | Description |
 |---------|-------------|
-| `Copy as pure Markdown` | Transform and copy active note to clipboard |
-| `Export current note as pure Markdown` | Export active note to folder |
-| `Export current note to Bear` | Send active note to Bear |
-| `Import from Bear` | Import a note from Bear via UUID or URL |
+| `Copy as pure Markdown` | Transform and copy the active note to clipboard |
+| `Export current note as pure Markdown` | Export the active note to folder |
+| `Send active note to Bear` | Dispatch the active note to Bear |
+| `Import from Bear` | Import a Bear note via UUID or URL |
+| `Send active note to WPS Cloud Note` | Dispatch the active note to a configured WPS provider |
+| `Send active note to Youdao Note` | Dispatch the active note to a configured Youdao provider |
 
 ## Installation
 

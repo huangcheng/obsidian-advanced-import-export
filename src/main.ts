@@ -132,7 +132,6 @@ export default class AdvancedImportExportPlugin extends Plugin {
 			...(raw ?? {}),
 			transform: { ...DEFAULT_SETTINGS.transform, ...(raw?.transform ?? {}) },
 			providers: raw?.providers ?? [],
-			mcpServers: raw?.mcpServers ?? [],
 		};
 		applyDefaultProviderMigration(this.settings);
 	}
