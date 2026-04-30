@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-advanced-import-export",
-	"version": "0.1.1",
+	"version": "0.1.2",
 	"description": "Obsidian plugin for portable Markdown export, Bear bridge, and pluggable CLI/MCP/HTTP import-export providers.",
 	"main": "main.js",
 	"type": "module",
