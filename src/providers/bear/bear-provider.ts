@@ -1,3 +1,4 @@
+import { Platform } from "obsidian";
 import {
 	FetchOptions,
 	ListOptions,
@@ -8,18 +9,30 @@ import {
 	RemoteListItem,
 } from "../provider";
 import { ProviderConfigBase, ProviderFactory } from "../registry";
+import { expandHome } from "../../util/subprocess";
+import { bearCliCreate, bearCliList, bearCliShow, bearCliVersion, DEFAULT_BEARCLI_PATH } from "./cli";
 import { bearOpenDelayMs, delay, dispatchToBear } from "./export";
 import { bearCallbackToNote, initiateBearImport } from "./import";
 import { bearAvailable, parseBearCallback } from "./url-scheme";
 
+export type BearTransport = "auto" | "url" | "cli";
+
+export interface BearCliTransportConfig {
+	binPath?: string;
+}
+
 export interface BearProviderConfig extends ProviderConfigBase {
 	kind: "bear";
+	transport?: BearTransport;
+	cli?: BearCliTransportConfig;
 }
 
 export const DEFAULT_BEAR_CONFIG: Omit<BearProviderConfig, "id" | "displayName"> = {
 	kind: "bear",
 	enabled: true,
 	trusted: true,
+	transport: "auto",
+	cli: { binPath: DEFAULT_BEARCLI_PATH },
 };
 
 interface PendingFetch {
@@ -32,10 +45,12 @@ interface PendingFetch {
 const FETCH_TIMEOUT_MS = 60_000;
 
 /**
- * Wraps Bear's `bear://x-callback-url` round-trip behind the `Provider`
- * contract. `fetch` defers to the OS-level callback resolved via
- * `handleCallback`, which the plugin wires from its
- * `obsidian://bear-callback` protocol handler.
+ * Wraps Bear behind the `Provider` contract. Two transports:
+ * - CLI (`bearcli`) — synchronous, supports list/search, no app focus steal.
+ * - URL scheme (`bear://x-callback-url`) — fallback for older Bear builds and iOS.
+ *
+ * `transport: "auto"` (default) probes the CLI once on first use and
+ * commits to whichever path works.
  */
 export class BearProvider implements Provider {
 	readonly id: string;
@@ -48,12 +63,19 @@ export class BearProvider implements Provider {
 		supportsAttachments: false,
 	};
 
+	private readonly transport: BearTransport;
+	private readonly cliBinPath: string;
+	private cliReady: Promise<boolean> | null = null;
+
 	private readonly pending = new Map<string, PendingFetch>();
 	private dispatchQueue: Promise<void> = Promise.resolve();
 
 	constructor(config: BearProviderConfig) {
 		this.id = config.id;
 		this.displayName = config.displayName || "Bear";
+		this.transport = config.transport ?? "auto";
+		const rawPath = config.cli?.binPath?.trim();
+		this.cliBinPath = expandHome(rawPath || DEFAULT_BEARCLI_PATH);
 	}
 
 	available(): ProviderAvailability {
@@ -62,9 +84,24 @@ export class BearProvider implements Provider {
 			: { ok: false, reason: "Bear is macOS / iOS only" };
 	}
 
+	private async useCli(): Promise<boolean> {
+		if (this.transport === "url") return false;
+		if (!Platform.isDesktop) return false;
+		if (this.transport === "cli") return true;
+		this.cliReady ??= bearCliVersion(this.cliBinPath).then((r) => r.ok);
+		return this.cliReady;
+	}
+
 	async push(note: NormalizedNote): Promise<{ remoteId: string }> {
 		if (!bearAvailable()) {
 			throw new Error("Bear export is only available on macOS / iOS");
+		}
+		if (await this.useCli()) {
+			return bearCliCreate(this.cliBinPath, {
+				title: note.title,
+				body: note.body,
+				tags: note.tags,
+			});
 		}
 		const prev = this.dispatchQueue;
 		let release: () => void = () => {};
@@ -86,12 +123,15 @@ export class BearProvider implements Provider {
 		}
 	}
 
-	fetch(remoteId: string, opts?: FetchOptions): Promise<NormalizedNote> {
+	async fetch(remoteId: string, opts?: FetchOptions): Promise<NormalizedNote> {
 		if (!bearAvailable()) {
-			return Promise.reject(new Error("Bear import is only available on macOS / iOS"));
+			throw new Error("Bear import is only available on macOS / iOS");
+		}
+		if (await this.useCli()) {
+			return bearCliShow(this.cliBinPath, remoteId);
 		}
 		if (this.pending.has(remoteId)) {
-			return Promise.reject(new Error(`Bear fetch already in progress for ${remoteId}`));
+			throw new Error(`Bear fetch already in progress for ${remoteId}`);
 		}
 		return new Promise<NormalizedNote>((resolve, reject) => {
 			const timer = setTimeout(() => {
@@ -116,8 +156,8 @@ export class BearProvider implements Provider {
 	}
 
 	/**
-	 * Resolve the in-flight fetch for the note Bear just round-tripped.
-	 * Wired from the plugin's `obsidian://bear-callback` handler.
+	 * Resolve the in-flight URL-scheme fetch for the note Bear just round-tripped.
+	 * No-op when CLI mode handled the fetch synchronously.
 	 */
 	handleCallback(searchParams: string): void {
 		const parsed = parseBearCallback(searchParams);
@@ -128,8 +168,6 @@ export class BearProvider implements Provider {
 		if (entry) {
 			key = id;
 		} else if (this.pending.size === 1) {
-			// Bear normally returns identifier; fall back to the only in-flight fetch
-			// for the rare case where it doesn't.
 			key = this.pending.keys().next().value as string;
 			entry = this.pending.get(key);
 		}
@@ -153,19 +191,46 @@ export class BearProvider implements Provider {
 		entry.resolve(note);
 	}
 
-	listRemote(_opts?: ListOptions): Promise<RemoteListItem[]> {
-		// Bear's x-callback-url surface has no list endpoint. Importing
-		// requires the user to know the note id; the BearImportModal asks
-		// for it directly.
-		return Promise.resolve([]);
+	async listRemote(opts?: ListOptions): Promise<RemoteListItem[]> {
+		if (await this.useCli()) {
+			return bearCliList(this.cliBinPath, { query: opts?.query });
+		}
+		// URL-scheme has no list endpoint — BearImportModal asks for the id directly.
+		return [];
 	}
 
-	testConnection(): Promise<{ ok: boolean; message?: string }> {
-		return Promise.resolve(
-			bearAvailable()
-				? { ok: true, message: "Bear is reachable on this OS" }
-				: { ok: false, message: "Bear is macOS / iOS only" },
-		);
+	async detectCli(): Promise<{
+		installed: boolean;
+		version?: string;
+		resolvedPath?: string;
+		message?: string;
+	}> {
+		if (!Platform.isDesktop) {
+			return { installed: false, message: "bearcli requires Obsidian Desktop" };
+		}
+		const result = await bearCliVersion(this.cliBinPath);
+		return result.ok
+			? { installed: true, version: result.version, resolvedPath: this.cliBinPath }
+			: { installed: false, resolvedPath: this.cliBinPath, message: result.message };
+	}
+
+	async testConnection(): Promise<{ ok: boolean; message?: string }> {
+		if (!bearAvailable()) {
+			return { ok: false, message: "Bear is macOS / iOS only" };
+		}
+		if (this.transport === "url") {
+			return { ok: true, message: "Bear URL scheme is reachable" };
+		}
+		if (await this.useCli()) {
+			const result = await bearCliVersion(this.cliBinPath);
+			return result.ok
+				? { ok: true, message: `bearcli ${result.version ?? "ok"} at ${this.cliBinPath}` }
+				: { ok: false, message: result.message ?? "bearcli not reachable" };
+		}
+		if (this.transport === "cli") {
+			return { ok: false, message: `bearcli not reachable at ${this.cliBinPath}` };
+		}
+		return { ok: true, message: "bearcli unavailable; using URL scheme fallback" };
 	}
 
 	dispose(): void {

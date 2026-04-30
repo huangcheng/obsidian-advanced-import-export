@@ -1,6 +1,7 @@
 import { App, Notice, PluginSettingTab, Setting } from "obsidian";
 import type AdvancedImportExportPlugin from "../main";
 import { BearProvider, BearProviderConfig } from "../providers/bear/bear-provider";
+import { DEFAULT_BEARCLI_PATH } from "../providers/bear/cli";
 import { ProviderConfigBase } from "../providers/registry";
 import { WpsProvider } from "../providers/wps/wps-provider";
 import { WpsProviderConfig } from "../providers/wps/types";
@@ -480,7 +481,7 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 	private renderBearProvider(containerEl: HTMLElement, config: BearProviderConfig): void {
 		new Setting(containerEl).setHeading().setName(config.displayName || "Bear");
 		containerEl.createEl("p", {
-			text: `${BEAR_NAME} notes are reached via the app's URL scheme (macOS and iOS only); no credentials needed.`,
+			text: `${BEAR_NAME} notes are reached via the official bearcli (desktop) or the app's URL scheme (macOS and iOS); no credentials needed.`,
 		});
 
 		new Setting(containerEl)
@@ -491,6 +492,61 @@ export class AdvancedImportExportSettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				}),
 			);
+
+		new Setting(containerEl)
+			.setName("Transport")
+			.setDesc("Auto probes bearcli once, then falls back to the URL scheme. URL = legacy / iOS only. CLI = require bearcli.")
+			.addDropdown((dd) =>
+				dd
+					.addOptions({ auto: "Auto", cli: "bearcli", url: "URL scheme" })
+					.setValue(config.transport ?? "auto")
+					.onChange(async (v) => {
+						config.transport = v as BearProviderConfig["transport"];
+						await this.plugin.saveSettings();
+						this.display();
+					}),
+			);
+
+		const transport = config.transport ?? "auto";
+		if (transport !== "url") {
+			if (!config.cli) config.cli = { binPath: DEFAULT_BEARCLI_PATH };
+			const cli = config.cli;
+
+			new Setting(containerEl)
+				.setName("CLI binary")
+				.setDesc(`Path to bearcli. Default ships inside ${BEAR_NAME}.app on macOS.`)
+				.addText((text) =>
+					text
+						.setPlaceholder(DEFAULT_BEARCLI_PATH)
+						.setValue(cli.binPath ?? "")
+						.onChange(async (v) => {
+							cli.binPath = v.trim();
+							await this.plugin.saveSettings();
+						}),
+				);
+
+			new Setting(containerEl)
+				.setName("Detect CLI")
+				.setDesc("Verify that bearcli is installed and executable.")
+				.addButton((btn) =>
+					btn.setButtonText("Detect").onClick(async () => {
+						const provider = this.plugin.registry.get(config.id) as BearProvider | null;
+						if (!provider) {
+							new Notice("Enable + trust the provider first, then retry.");
+							return;
+						}
+						const result = await provider.detectCli();
+						if (result.installed) {
+							new Notice(
+								`Found bearcli ${result.version ?? ""}${result.resolvedPath ? ` at ${result.resolvedPath}` : ""}`.trim(),
+								8000,
+							);
+						} else {
+							new Notice(result.message ?? "bearcli not found", 12000);
+						}
+					}),
+				);
+		}
 
 		new Setting(containerEl)
 			.setName("Enabled")
