@@ -83,22 +83,22 @@ Configure via **Settings → Community plugins → Cross-App Notes Bridge**.
 The plugin isn't in the official community catalogue yet. The easiest way to install and stay up-to-date is through [BRAT (Beta Reviewers Auto-update Tool)](https://github.com/TfTHacker/obsidian42-brat):
 
 1. Install **BRAT** from **Settings → Community plugins → Browse**, then enable it.
-2. Open **Settings → BRAT → Add Beta plugin** and paste `huangcheng/obsidian-advanced-import-export`.
+2. Open **Settings → BRAT → Add Beta plugin** and paste `huangcheng/cross-app-notes-bridge`.
 3. BRAT downloads the latest release into your vault and tracks new versions automatically.
 
 See the [BRAT plugin docs](https://tfthacker.com/brat-plugins) for details on auto-updates and pinning to a specific version.
 
 ### From GitHub release
 
-1. Download `main.js`, `manifest.json`, and `styles.css` from the [latest release](https://github.com/huangcheng/obsidian-advanced-import-export/releases).
+1. Download `main.js`, `manifest.json`, and `styles.css` from the [latest release](https://github.com/huangcheng/cross-app-notes-bridge/releases).
 2. Copy them into `<vault>/.obsidian/plugins/advanced-import-export/`.
 3. Enable the plugin in **Settings → Community plugins**.
 
 ### Build from source
 
 ```bash
-git clone https://github.com/huangcheng/obsidian-advanced-import-export.git
-cd obsidian-advanced-import-export
+git clone https://github.com/huangcheng/cross-app-notes-bridge.git
+cd cross-app-notes-bridge
 npm install
 npm run build
 ```

@@ -83,22 +83,22 @@
 插件目前还没进官方社区市场。最方便的安装与持续更新方式是用 [BRAT（Beta Reviewers Auto-update Tool）](https://github.com/TfTHacker/obsidian42-brat)：
 
 1. 在 **Settings → Community plugins → Browse** 安装 **BRAT** 并启用。
-2. 打开 **Settings → BRAT → Add Beta plugin**，粘贴 `huangcheng/obsidian-advanced-import-export`。
+2. 打开 **Settings → BRAT → Add Beta plugin**，粘贴 `huangcheng/cross-app-notes-bridge`。
 3. BRAT 会把最新 Release 下载到你的库里，并自动跟随后续版本更新。
 
 关于自动更新和锁定到特定版本，见 [BRAT 插件文档](https://tfthacker.com/brat-plugins)。
 
 ### 从 GitHub Release 安装
 
-1. 从 [最新 Release](https://github.com/huangcheng/obsidian-advanced-import-export/releases) 下载 `main.js`、`manifest.json` 和 `styles.css`。
+1. 从 [最新 Release](https://github.com/huangcheng/cross-app-notes-bridge/releases) 下载 `main.js`、`manifest.json` 和 `styles.css`。
 2. 把它们放进 `<你的库>/.obsidian/plugins/advanced-import-export/`。
 3. 在 **Settings → Community plugins** 里启用插件。
 
 ### 从源码构建
 
 ```bash
-git clone https://github.com/huangcheng/obsidian-advanced-import-export.git
-cd obsidian-advanced-import-export
+git clone https://github.com/huangcheng/cross-app-notes-bridge.git
+cd cross-app-notes-bridge
 npm install
 npm run build
 ```
