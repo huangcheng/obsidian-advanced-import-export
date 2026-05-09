@@ -41,9 +41,16 @@ export default tseslint.config(
 					"IntelliJ IDEA", "WebStorm", "PyCharm",
 					// Project-specific brands
 					"Bear", "WPS", "WPS Note", "WPS Cloud Note", "Youdao", "Youdao Note",
-					"MCP", "Advanced Import/Export", "macOS", "iOS",
+					"MCP", "Advanced Import/Export", "macOS", "iOS", "Flomo",
 				],
 			}],
+		},
+	},
+	{
+		files: ["**/*.test.ts"],
+		rules: {
+			"import/no-nodejs-modules": "off",
+			"@typescript-eslint/no-floating-promises": "off",
 		},
 	},
 	globalIgnores([

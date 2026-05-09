@@ -1,5 +1,6 @@
 import { BearProviderConfig, DEFAULT_BEAR_CONFIG } from "../providers/bear/bear-provider";
 import { bearAvailable } from "../providers/bear/url-scheme";
+import { DEFAULT_FLOMO_CONFIG, FlomoProviderConfig } from "../providers/flomo/types";
 import { ProviderConfigBase } from "../providers/registry";
 import { DEFAULT_WPS_CONFIG, WpsProviderConfig } from "../providers/wps/types";
 import { DEFAULT_YOUDAO_CONFIG, YoudaoProviderConfig } from "../providers/youdao/types";
@@ -9,6 +10,7 @@ export type ProviderConfig =
 	| BearProviderConfig
 	| WpsProviderConfig
 	| YoudaoProviderConfig
+	| FlomoProviderConfig
 	| ProviderConfigBase;
 
 export interface PluginSettings {
@@ -57,6 +59,14 @@ export function applyDefaultProviderMigration(settings: PluginSettings): void {
 			id: "youdao",
 			displayName: "Youdao Note",
 			...DEFAULT_YOUDAO_CONFIG,
+		};
+		settings.providers.push(cfg);
+	}
+	if (!settings.providers.some((p) => p.kind === "flomo")) {
+		const cfg: FlomoProviderConfig = {
+			id: "flomo",
+			displayName: "Flomo",
+			...DEFAULT_FLOMO_CONFIG,
 		};
 		settings.providers.push(cfg);
 	}
