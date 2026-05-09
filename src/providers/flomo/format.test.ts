@@ -1,7 +1,8 @@
 import { strict as assert } from "node:assert";
 import { describe, it } from "node:test";
-import { formatFlomoContent } from "./format";
+import { formatFlomoContent, pickFlomoWriteTool } from "./format";
 import type { NormalizedNote } from "../provider";
+import type { McpToolDefinition } from "../../mcp/types";
 
 function note(overrides: Partial<NormalizedNote>): NormalizedNote {
 	return {
@@ -13,6 +14,10 @@ function note(overrides: Partial<NormalizedNote>): NormalizedNote {
 		sourceMeta: {},
 		...overrides,
 	};
+}
+
+function tool(name: string): McpToolDefinition {
+	return { name, inputSchema: { type: "object" } };
 }
 
 describe("formatFlomoContent", () => {
@@ -51,5 +56,41 @@ describe("formatFlomoContent", () => {
 	it("strips a leading '#' that the user already added to a tag", () => {
 		const out = formatFlomoContent(note({ body: "x", tags: ["#already", "raw"] }));
 		assert.equal(out, "#already #raw\n\nx");
+	});
+});
+
+describe("pickFlomoWriteTool", () => {
+	it("returns the configured override when present in the tool list", () => {
+		const t = pickFlomoWriteTool([tool("write_note"), tool("custom_write")], "custom_write");
+		assert.equal(t, "custom_write");
+	});
+
+	it("throws if the override is not present", () => {
+		assert.throws(
+			() => pickFlomoWriteTool([tool("write_note")], "missing_tool"),
+			/missing_tool/,
+		);
+	});
+
+	it("prefers write_note when both candidates are present", () => {
+		const t = pickFlomoWriteTool([tool("write_memo"), tool("write_note")]);
+		assert.equal(t, "write_note");
+	});
+
+	it("falls back to write_memo when write_note is absent", () => {
+		const t = pickFlomoWriteTool([tool("write_memo"), tool("read_note")]);
+		assert.equal(t, "write_memo");
+	});
+
+	it("falls back to any write_* tool when neither canonical name exists", () => {
+		const t = pickFlomoWriteTool([tool("write_thing")]);
+		assert.equal(t, "write_thing");
+	});
+
+	it("throws with a useful message when no write tool exists", () => {
+		assert.throws(
+			() => pickFlomoWriteTool([tool("read_note"), tool("search")]),
+			/no write tool/i,
+		);
 	});
 });
