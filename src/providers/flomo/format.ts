@@ -25,15 +25,25 @@ export function formatFlomoContent(note: NormalizedNote): string {
 	return segments.join("\n\n");
 }
 
-const PREFERRED_TOOL_NAMES = ["write_note", "write_memo"] as const;
+const PREFERRED_TOOL_NAMES = [
+	"memo_create",
+	"write_note",
+	"write_memo",
+	"create_memo",
+	"create_note",
+] as const;
+
+const WRITE_VERB_PREFIXES = ["write_", "create_", "add_", "save_"] as const;
 
 /**
  * Choose which MCP tool to call when pushing a memo to Flomo.
  *
- * The official Flomo server exposes `write_note`. The community
- * `chatmcp/mcp-server-flomo` fork uses `write_memo`. We accept either
- * (preferring the official name) and let the user override when the
- * server eventually changes its name.
+ * The official Flomo server (https://flomoapp.com/mcp) exposes
+ * `memo_create`. The community `chatmcp/mcp-server-flomo` fork uses
+ * `write_note` / `write_memo`. We accept any of those (preferring the
+ * official name) and let the user override when the server eventually
+ * changes its name. As a last resort we look for any tool whose name
+ * combines a write verb with "memo" / "note".
  */
 export function pickFlomoWriteTool(
 	tools: McpToolDefinition[],
@@ -50,10 +60,17 @@ export function pickFlomoWriteTool(
 	for (const candidate of PREFERRED_TOOL_NAMES) {
 		if (tools.some((t) => t.name === candidate)) return candidate;
 	}
-	const writeAny = tools.find((t) => t.name.startsWith("write_"));
-	if (writeAny) return writeAny.name;
+	const heuristic = tools.find((t) => {
+		const name = t.name.toLowerCase();
+		const hasNoun = name.includes("memo") || name.includes("note");
+		const hasVerb = WRITE_VERB_PREFIXES.some((p) => name.startsWith(p));
+		return hasNoun && hasVerb;
+	});
+	if (heuristic) return heuristic.name;
 	throw new Error(
-		"Flomo MCP advertised no write tool. Expected `write_note` or `write_memo`. " +
-			`Server tools: ${tools.map((t) => t.name).join(", ") || "(none)"}.`,
+		"Flomo MCP advertised no write tool. Expected one of " +
+			`${PREFERRED_TOOL_NAMES.join(", ")}. ` +
+			`Server tools: ${tools.map((t) => t.name).join(", ") || "(none)"}. ` +
+			"Set 'writeToolName' in settings to pick one manually.",
 	);
 }

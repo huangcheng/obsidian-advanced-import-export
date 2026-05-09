@@ -82,14 +82,29 @@ describe("pickFlomoWriteTool", () => {
 		assert.equal(t, "write_memo");
 	});
 
-	it("falls back to any write_* tool when neither canonical name exists", () => {
-		const t = pickFlomoWriteTool([tool("write_thing")]);
-		assert.equal(t, "write_thing");
+	it("falls back to any write_<noun> tool when neither canonical name exists", () => {
+		const t = pickFlomoWriteTool([tool("write_thing"), tool("write_note_v2")]);
+		assert.equal(t, "write_note_v2");
+	});
+
+	it("picks memo_create from the official Flomo server tool list", () => {
+		const t = pickFlomoWriteTool([
+			tool("memo_search"),
+			tool("memo_create"),
+			tool("memo_update"),
+			tool("tag_search"),
+		]);
+		assert.equal(t, "memo_create");
+	});
+
+	it("falls back to a verb+noun heuristic when no preferred name is present", () => {
+		const t = pickFlomoWriteTool([tool("save_memo"), tool("memo_search")]);
+		assert.equal(t, "save_memo");
 	});
 
 	it("throws with a useful message when no write tool exists", () => {
 		assert.throws(
-			() => pickFlomoWriteTool([tool("read_note"), tool("search")]),
+			() => pickFlomoWriteTool([tool("memo_search"), tool("tag_tree")]),
 			/no write tool/i,
 		);
 	});

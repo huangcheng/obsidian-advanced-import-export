@@ -1,9 +1,9 @@
 {
 	"id": "advanced-import-export",
 	"name": "Cross-App Notes Bridge",
-	"version": "0.1.2",
+	"version": "0.1.3",
 	"minAppVersion": "1.4.0",
-	"description": "Copy notes as portable Markdown and bridge with Bear, WPS Cloud Note, and Youdao Note.",
+	"description": "Copy notes as portable Markdown and bridge with Bear, WPS Cloud Note, Youdao Note, and Flomo.",
 	"author": "HUANG Cheng",
 	"authorUrl": "https://github.com/huangcheng",
 	"isDesktopOnly": false
