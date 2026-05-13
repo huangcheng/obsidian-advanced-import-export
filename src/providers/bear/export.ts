@@ -8,7 +8,7 @@ export function bearOpenDelayMs(): number {
 }
 
 export function delay(ms: number): Promise<void> {
-	return new Promise((resolve) => setTimeout(resolve, ms));
+	return new Promise((resolve) => window.setTimeout(resolve, ms));
 }
 
 export function tagsFromFrontmatter(app: App, file: TFile): string[] {

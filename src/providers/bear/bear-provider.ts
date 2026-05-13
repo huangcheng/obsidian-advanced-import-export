@@ -38,7 +38,7 @@ export const DEFAULT_BEAR_CONFIG: Omit<BearProviderConfig, "id" | "displayName">
 interface PendingFetch {
 	resolve: (note: NormalizedNote) => void;
 	reject: (err: Error) => void;
-	timer: ReturnType<typeof setTimeout>;
+	timer: number;
 	signalCleanup?: () => void;
 }
 
@@ -134,7 +134,7 @@ export class BearProvider implements Provider {
 			throw new Error(`Bear fetch already in progress for ${remoteId}`);
 		}
 		return new Promise<NormalizedNote>((resolve, reject) => {
-			const timer = setTimeout(() => {
+			const timer = window.setTimeout(() => {
 				this.pending.delete(remoteId);
 				reject(new Error(`Bear fetch timed out for ${remoteId}`));
 			}, FETCH_TIMEOUT_MS);
@@ -143,7 +143,7 @@ export class BearProvider implements Provider {
 			if (opts?.signal) {
 				const onAbort = () => {
 					this.pending.delete(remoteId);
-					clearTimeout(timer);
+					window.clearTimeout(timer);
 					reject(new Error("Cancelled"));
 				};
 				opts.signal.addEventListener("abort", onAbort, { once: true });
@@ -174,7 +174,7 @@ export class BearProvider implements Provider {
 		if (!entry || key === undefined) return;
 
 		this.pending.delete(key);
-		clearTimeout(entry.timer);
+		window.clearTimeout(entry.timer);
 		entry.signalCleanup?.();
 
 		if (!parsed.success) {
@@ -235,7 +235,7 @@ export class BearProvider implements Provider {
 
 	dispose(): void {
 		for (const entry of this.pending.values()) {
-			clearTimeout(entry.timer);
+		window.clearTimeout(entry.timer);
 			entry.signalCleanup?.();
 			entry.reject(new Error("BearProvider disposed"));
 		}

@@ -41,7 +41,7 @@ const COMMON_BIN_DIRS = [
  * built-ins) is the only reliable path.
  */
 function nodeRequire<T = unknown>(name: string): T {
-	const g = globalThis as { require?: (id: string) => unknown };
+	const g = window as { require?: (id: string) => unknown };
 	const w = (typeof window !== "undefined" ? (window as { require?: (id: string) => unknown }) : undefined);
 	const req = g.require ?? w?.require;
 	if (typeof req !== "function") {
@@ -51,7 +51,7 @@ function nodeRequire<T = unknown>(name: string): T {
 }
 
 function processEnv(): Record<string, string | undefined> {
-	const proc = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process;
+	const proc = (window as { process?: { env?: Record<string, string | undefined> } }).process;
 	return proc?.env ?? {};
 }
 
@@ -71,7 +71,7 @@ export function expandHome(p: string): string {
 }
 
 function pathSeparator(): string {
-	const proc = (globalThis as { process?: { platform?: string } }).process;
+	const proc = (window as { process?: { platform?: string } }).process;
 	return proc?.platform === "win32" ? ";" : ":";
 }
 
@@ -190,7 +190,7 @@ export async function whichBin(bin: string): Promise<string | null> {
 			return null;
 		}
 	}
-	const proc = (globalThis as { process?: { platform?: string } }).process;
+	const proc = (window as { process?: { platform?: string } }).process;
 	const tool = proc?.platform === "win32" ? "where" : "which";
 	try {
 		const result = await runChild(tool, [expanded]);
