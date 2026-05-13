@@ -1,4 +1,4 @@
-import { Menu, MenuItem, Notice, ObsidianProtocolData, Plugin, TAbstractFile, TFile } from "obsidian";
+import { Menu, MenuItem, moment, Notice, ObsidianProtocolData, Plugin, TAbstractFile, TFile } from "obsidian";
 import { initializeI18n, t } from "./i18n";
 import { Orchestrator } from "./orchestrator/orchestrator";
 import { planExport, writeExports } from "./orchestrator/file-writer";
@@ -18,7 +18,7 @@ import { NoteSelection } from "./selection/note-selection";
 import { applyDefaultProviderMigration, DEFAULT_SETTINGS, PluginSettings } from "./settings";
 import { AdvancedImportExportSettingTab } from "./settings/settings-tab";
 import { MarkdownTransformer } from "./transforms/transformer";
-import { BEAR_NAME, FLOMO_NAME, WPS_NAME, YOUDAO_NAME } from "./ui/brand-names";
+import { FLOMO_NAME, WPS_NAME, YOUDAO_NAME } from "./ui/brand-names";
 import { ExportConfirmModal } from "./ui/export-confirm-modal";
 import { BearImportModal } from "./ui/bear-import-modal";
 
@@ -29,7 +29,7 @@ export default class AdvancedImportExportPlugin extends Plugin {
 	private bearImportModal: BearImportModal | null = null;
 
 	async onload(): Promise<void> {
-		initializeI18n();
+		initializeI18n(moment.locale());
 		this.registry = new ProviderRegistry();
 		registerAllFactories(this.registry);
 		await this.loadSettings();

@@ -35,7 +35,7 @@ export function t(key: TranslationKey, params?: Record<string, string | number>)
 		return key;
 	}
 	if (params) {
-		return value.replace(/\{\{(\w+)\}\}/g, (_, paramKey) => {
+		return value.replace(/\{\{(\w+)\}\}/g, (_, paramKey: string) => {
 			const paramValue = params[paramKey];
 			return paramValue !== undefined ? String(paramValue) : `{{${paramKey}}}`;
 		});
@@ -43,16 +43,8 @@ export function t(key: TranslationKey, params?: Record<string, string | number>)
 	return value;
 }
 
-export function initializeI18n(forceLocale?: string): void {
-	let locale: string;
-	if (forceLocale) {
-		locale = forceLocale;
-	} else {
-		// Lazy import to avoid loading obsidian in test environments
-		const { moment } = require("obsidian");
-		locale = moment.locale() ?? "en";
-	}
-	const normalized = locale.toLowerCase();
+export function initializeI18n(locale?: string): void {
+	const normalized = (locale ?? "en").toLowerCase();
 	const lang = normalized.startsWith("zh") ? "zh" : normalized in locales ? normalized : "en";
 	currentLocale = locales[lang] ?? en;
 }
